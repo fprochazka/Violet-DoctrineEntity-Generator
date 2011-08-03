@@ -31,6 +31,9 @@ class ClassDiagramReader extends Nette\Object
 	/** @var array */
 	private $types = array();
 
+	/** @var array */
+	private $errors = array();
+
 	/** @var PropertiesLexer */
 	private $propertiesLexer;
 
@@ -72,6 +75,16 @@ class ClassDiagramReader extends Nette\Object
 
 
 	/**
+	 * @return array
+	 */
+	public function getErrors()
+	{
+		return $this->errors;
+	}
+
+
+
+	/**
 	 * @return object
 	 */
 	private function read()
@@ -80,18 +93,22 @@ class ClassDiagramReader extends Nette\Object
 			$this->parseXml();
 			$mapper = function ($object) { return $object->getFullName(); };
 
-			$this->packages = array_combine(array_map($mapper, $this->packages), $this->packages);
-			ksort($this->packages);
-
-			$this->types = array_combine(array_map($mapper, $this->types), $this->types);
-			ksort($this->types);
-
-			foreach ($this->types as $type) {
-				$this->parseTypeAttributes($type);
+			if ($this->packages) {
+				$this->packages = array_combine(array_map($mapper, $this->packages), $this->packages);
+				ksort($this->packages);
 			}
 
-			foreach ($this->types as $type) {
-				$this->finalizeConnections($type);
+			if ($this->types) {
+				$this->types = array_combine(array_map($mapper, $this->types), $this->types);
+				ksort($this->types);
+
+				foreach ($this->types as $type) {
+					$this->parseTypeAttributes($type);
+				}
+
+				foreach ($this->types as $type) {
+					$this->finalizeConnections($type);
+				}
 			}
 		}
 
@@ -174,7 +191,7 @@ class ClassDiagramReader extends Nette\Object
 			}
 
 		} else {
-			throw new Nette\NotImplementedException("Unknown object");
+			//throw new Nette\NotImplementedException("Unknown object");
 		}
 	}
 
@@ -221,10 +238,22 @@ class ClassDiagramReader extends Nette\Object
 			case '-dotted': // note
 				break;
 			case 'triangle-': // inherits
-				$types[0]->extends = $types[1];
+				if ($types[0] instanceof InterfaceType) {
+					$types[0]->extends[] = $types[1];
+
+				} else {
+					$types[0]->extends = $types[1];
+				}
+
 				break;
 			case 'triangle-dotted': // implements
-				$types[0]->implements[] = $types[1];
+				if ($types[0] instanceof ClassType) {
+					$types[0]->implements[] = $types[1];
+
+				} else {
+					$this->errors[] = 'Interface ' . $types[0]->getFullName() . ' cannot implement ' . $types[1]->getFullName();
+				}
+
 				break;
 			case 'black_triangle-': // BLACK_TRIANGLE -
 				break;
@@ -402,11 +431,74 @@ class ClassDiagramReader extends Nette\Object
 	{
 		if ($type instanceof ClassType && is_string($type->properties)) {
 			$type->properties = $this->propertiesLexer->parse($type->properties);
+			foreach ($type->properties as $property) {
+				$property->parentType = $type;
+				$property->type = $this->resolveNearestType($type, $property->type);
+				$property->subtype = $this->resolveNearestType($type, $property->subtype);
+				$property->defaultValue = $this->resolveNearestType($type, $property->defaultValue);
+			}
 		}
 
 		if (is_string($type->methods)) {
 			$type->methods = $this->methodsLexer->parse($type->methods);
+			foreach ($type->methods as $method) {
+				$method->parentType = $type;
+				$method->returns = $this->resolveNearestType($type, $method->returns);
+				$method->returnsSubtype = $this->resolveNearestType($type, $method->returnsSubtype);
+				foreach ($method->args as $name => &$argType) {
+					$argType = $this->resolveNearestType($type, $argType);
+				}
+			}
 		}
+	}
+
+
+
+	/**
+	 * @param BaseType $type
+	 * @param string $typeName
+	 * @return string|BaseType
+	 */
+	private function resolveNearestType(BaseType $type, $typeName)
+	{
+		if (!$typeName) {
+			return $typeName;
+		}
+
+		$package = $type->package;
+		while ($package) {
+			$match = $this->checkTypesNames($package->types, $typeName);
+			if ($match) {
+				return $match;
+			}
+
+			$package = $package->package;
+		}
+
+		return $this->checkTypesNames($this->types, $typeName) ?: $typeName;
+	}
+
+
+
+	/**
+	 * @param array $types
+	 * @param string $typeName
+	 * @return object|NULL
+	 */
+	private function checkTypesNames(array $types, $typeName)
+	{
+		foreach ($types as $sibling) {
+			if ($typeName === $sibling->name) {
+				return $sibling;
+
+			} elseif ($typeName === $sibling->getFullName()) {
+				return $sibling;
+			}
+
+			// TODO: think about more types of relations
+		}
+
+		return NULL;
 	}
 
 
@@ -420,7 +512,128 @@ class ClassDiagramReader extends Nette\Object
 			return;
 		}
 
+		foreach ($type->relations as $relationName => $relations) {
+			foreach ($relations as $relatedType) {
+				$this->finalizeConnection($type, $relatedType, $relationName);
+			}
+		}
+	}
 
+
+
+	/**
+	 * @param ClassType $type
+	 * @param ClassType $relatedType
+	 * @param string $relationName
+	 */
+	private function finalizeConnection(ClassType $type, ClassType $relatedType, $relationName)
+	{
+		$left = $this->resolveTypePropertiesRelations($type, $relatedType);
+		$right = $this->resolveTypePropertiesRelations($relatedType, $type, is_array($left) ? $left : array($left));
+		$relations = $this->resolveRelationsIntersection($type, $relatedType);
+
+		if (!$left && !$right) {
+			$this->errors[] = "Relation of " . $type->getFullName() . " -> " . $relatedType->getFullName() . " can't be resolved";
+			return;
+		}
+
+//		echo "-------------\n";
+//		var_dump($type->getFullName() . ' -> ' . $relatedType->getFullName());
+//		var_dump($relations);
+
+		$leftProperty = is_array($left) ? reset($left) : $left;
+		$rightProperty = is_array($right) ? reset($right) : $right;
+
+		if ($left) {
+			$leftProperty->relationType = is_object($left) ? Property::RELATION_HAS_ONE : Property::RELATION_HAS_MANY;
+			$leftProperty->relation = $relatedType;
+
+			if ($right) {
+				if ($leftProperty->parentType === $rightProperty->parentType) { // self referencing
+					$rightProperty->relationType = is_object($right) ? Property::RELATION_HAS_ONE : Property::RELATION_HAS_MANY;
+					$rightProperty->relation = $type;
+				}
+
+			} elseif ($relations[$relationName] <= 1) { // Unidirectional
+				// Many-To-One
+				if ($leftProperty->relationType === Property::RELATION_HAS_ONE && $relationName === 'aggregation') {
+					$leftProperty->otherSideRelationType = Property::RELATION_HAS_MANY;
+				}
+
+				// One-To-Many
+				if ($leftProperty->relationType === Property::RELATION_HAS_MANY && $relationName === 'aggregation') {
+					$leftProperty->otherSideRelationType = Property::RELATION_HAS_ONE;
+				}
+			}
+		}
+	}
+
+
+
+	/**
+	 * @param ClassType $type
+	 * @param ClassType $relatedType
+	 * @return array
+	 */
+	private function resolveRelationsIntersection(ClassType $type, ClassType $relatedType)
+	{
+		$relationsCounts = array(
+			'composition' => 0,
+			'aggregation' => 0,
+		);
+
+		foreach ($type->relations as $relationName => $relations) {
+			foreach ($relations as $otherSide) {
+				if ($relatedType === $otherSide) {
+					$relationsCounts[$relationName] += 1;
+				}
+			}
+		}
+
+		return $relationsCounts;
+	}
+
+
+
+	/**
+	 * @param ClassType $type
+	 * @param ClassType $relatedType
+	 */
+	private function resolveTypePropertiesRelations(ClassType $type, ClassType $relatedType, array $ignore = array())
+	{
+		do {
+			foreach ($type->properties as $property) {
+				if ($this->resolveRelationType($property, $relatedType, $relation)) {
+					$relatedProperty = is_array($relation) ? reset($relation) : $relation;
+					if (!in_array($relatedProperty, $ignore, TRUE)) {
+						return $relation;
+					}
+				}
+			}
+
+		} while($type = $type->extends);
+
+		return NULL;
+	}
+
+
+
+	/**
+	 * @param Property $property
+	 * @param ClassType $type
+	 * @param NULL $relation
+	 * @return boolean
+	 */
+	private function resolveRelationType(Property $property, ClassType $type, &$relation)
+	{
+		if ($property->type === $type) {
+			$relation = $property;
+
+		} elseif ($property->type === 'Collection' && $property->subtype === $type) {
+			$relation = array($property);
+		}
+
+		return (bool)$relation;
 	}
 
 }

@@ -38,17 +38,79 @@ class ClassType extends BaseType
 
 
 
-	public function addComposedOf(BaseType $type)
+	/**
+	 * @param BaseType $type
+	 */
+	public function addComposedOf(ClassType $type)
 	{
 		$this->relations['composition'][] = $type;
-		$type->relations['composition'][] = $this;
+		if ($type !== $this) {
+			$type->relations['composition'][] = $this;
+		}
 	}
 
 
-	public function addAggregateOf(BaseType $type)
+
+	/**
+	 * @param BaseType $type
+	 */
+	public function addAggregateOf(ClassType $type)
 	{
 		$this->relations['aggregation'][] = $type;
-		$type->relations['aggregation'][] = $this;
+		if ($type !== $this) {
+			$type->relations['aggregation'][] = $this;
+		}
+	}
+
+
+
+	/**
+	 * @return bool
+	 */
+	public function hasCollections()
+	{
+		foreach ($this->properties as $property) {
+			if ($property->isCollection()) {
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
+
+
+	/**
+	 * @return array
+	 */
+	public function getUsedRootPackages()
+	{
+		$packages = array(
+			is_object($this->extends) ? $this->extends->getRootPackage() : NULL
+		);
+
+		foreach ($this->implements as $interface) {
+			$packages[] = $interface->getRootPackage();
+		}
+
+		foreach ($this->properties as $property) {
+			$packages[] = is_object($property->type) ? $property->type->getRootPackage() : NULL;
+			$packages[] = is_object($property->subtype) ? $property->subtype->getRootPackage() : NULL;
+			$packages[] = is_object($property->defaultValue) ? $property->defaultValue->getRootPackage() : NULL;
+			$packages[] = is_object($property->relation) ? $property->relation->getRootPackage() : NULL;
+		}
+
+		foreach ($this->methods as $method) {
+			$packages[] = is_object($method->returns) ? $method->returns->getRootPackage() : NULL;
+			$packages[] = is_object($method->returnsSubtype) ? $method->returnsSubtype->getRootPackage() : NULL;
+			foreach ($method->args as $argName => $argType) {
+				$packages[] = is_object($argType) ? $argType->getRootPackage() : NULL;
+			}
+		}
+
+		$packages = array_unique(array_filter($packages));
+		sort($packages);
+		return $packages;
 	}
 
 }

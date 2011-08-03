@@ -1,0 +1,36 @@
+{!='<'.'?php'}
+
+{if $type->package}namespace {$type->package->getFullName()};{/if}
+{foreach $type->getUsedRootPackages() as $package}{first}
+{/first}
+use {$package};
+{/foreach}
+
+
+
+interface {$type->name} {block #extends|strip|trim}
+	{foreach $type->extends as $extended}
+		{first}extends {/first}
+		{$type->getRelativeName($extended)}
+		{sep}, {/sep}
+	{/foreach}
+{/block}
+
+{l}
+{foreach $type->methods as $method}
+
+
+	/**
+	{foreach $method->getFormatedArgs(TRUE) as $name => $argType}
+	 * @param {$argType} ${$name}
+	{/foreach}
+	 * @return {$method->returnType}
+	 */
+	function {$method->name}({block #args|strip|trim}
+		{foreach $method->formatedArgs as $name => $argType}
+			{=ltrim($argType . ' ')}${$name}{sep}, {/sep}
+		{/foreach}
+	{/block});
+{/foreach}
+
+{r}

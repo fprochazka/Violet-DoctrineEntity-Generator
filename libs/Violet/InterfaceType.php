@@ -27,4 +27,28 @@ class InterfaceType extends BaseType
 	/** @var array */
 	public $methods = array();
 
+
+
+	/**
+	 * @return array
+	 */
+	public function getUsedRootPackages()
+	{
+		foreach ($this->extends as $interface) {
+			$packages[] = $interface->getRootPackage();
+		}
+
+		foreach ($this->methods as $method) {
+			$packages[] = is_object($method->returns) ? $method->returns->getRootPackage() : NULL;
+			$packages[] = is_object($method->returnsSubtype) ? $method->returnsSubtype->getRootPackage() : NULL;
+			foreach ($method->args as $argName => $argType) {
+				$packages[] = is_object($argType) ? $argType->getRootPackage() : NULL;
+			}
+		}
+
+		$packages = array_unique(array_filter($packages));
+		sort($packages);
+		return $packages;
+	}
+
 }

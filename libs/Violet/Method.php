@@ -29,6 +29,9 @@ class Method extends Nette\Object
 	/** @var string */
 	public $name;
 
+	/** @var BaseType */
+	public $parentType;
+
 	/** @var string */
 	public $visibility = self::VISIBILITY_PUBLIC;
 
@@ -40,5 +43,45 @@ class Method extends Nette\Object
 
 	/** @var string */
 	public $returnsSubtype;
+
+
+
+	/**
+	 * @param boolean $phpDoc
+	 * @return array
+	 */
+	public function getFormatedArgs($phpDoc = FALSE)
+	{
+		$args = array();
+		foreach ($this->args as $name => $type) {
+			if (is_object($type)) {
+				$args[$name] = $this->parentType->getRelativeName($this->returns);
+
+			} else {
+				$args[$name] = $phpDoc ? $type : NULL;
+			}
+		}
+
+		return $args;
+	}
+
+
+
+	/**
+	 * @return string
+	 */
+	public function getReturnType()
+	{
+		if ($this->returns === 'Collection') {
+			if (is_object($this->returnsSubtype)) {
+				return $this->parentType->getRelativeName($this->returnsSubtype) . '[]';
+			}
+
+		} elseif (is_object($this->returns)) {
+			return $this->parentType->getRelativeName($this->returns);
+		}
+
+		return $this->returns;
+	}
 
 }

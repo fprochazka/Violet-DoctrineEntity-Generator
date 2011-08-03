@@ -1,0 +1,56 @@
+{!='<'.'?php'}
+{if $type->package}
+namespace {$type->package->getFullName()};{/if}
+{foreach $type->getUsedRootPackages() as $package}{first}
+{/first}
+use {$package};
+{/foreach}
+{if $type->hasCollections()}
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+{/if}
+
+
+
+/**
+ * @Entity
+ */
+class {$type->name}{if $type->extends} extends {$type->getRelativeName($type->extends)}{/if} {block #implements|strip|trim}
+	{foreach $type->implements as $implements}
+		{first}implements {/first}
+		{$type->getRelativeName($implements)}
+		{sep}, {/sep}
+	{/foreach}
+{/block}
+
+{l}
+
+{foreach $type->properties as $property}
+	/**
+	{foreach $property->annotations as $annotation}
+	 * {$annotation}
+	{/foreach}
+	 */
+	{$property->visibility} ${$property->name};
+
+{/foreach}
+{foreach $type->methods as $method}
+
+
+	/**
+	{foreach $method->getFormatedArgs(TRUE) as $name => $argType}
+	 * @param {$argType} ${$name}
+	{/foreach}
+	 * @return {$method->returnType}
+	 */
+	{$method->visibility} function {$method->name}({block #args|strip|trim}
+		{foreach $method->formatedArgs as $name => $argType}
+			{=ltrim($argType . ' ')}${$name}{sep}, {/sep}
+		{/foreach}
+	{/block})
+	{
+		throw new Nette\NotImplementedException;
+	}
+
+{/foreach}
+{r}

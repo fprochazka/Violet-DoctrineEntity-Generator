@@ -37,4 +37,57 @@ abstract class BaseType extends Nette\Object
 		return ($this->package ? $this->package->getFullName() . '\\' : NULL) . $this->name;
 	}
 
+
+
+	/**
+	 * @return string
+	 */
+	public function getWebalizedName()
+	{
+		return str_replace('-', '', Nette\Utils\Strings::webalize($this->name));
+	}
+
+
+
+	/**
+	 * @param BaseType $type
+	 * @return string
+	 */
+	public function getRelativeName($type)
+	{
+		if (!$type instanceof BaseType) {
+			return $type;
+		}
+
+		return $type->package !== $this->package
+			? $type->getFullName()
+			: $type->name;
+	}
+
+
+
+	/**
+	 * @return array
+	 */
+	public function getUsedRootPackages()
+	{
+		return array();
+	}
+
+
+
+	/**
+	 * @return Package
+	 */
+	public function getRootPackage()
+	{
+		$package = $this->package;
+		while ($package && $package->package) {
+			// we need to go deeper!
+			$package = $package->package;
+		}
+
+		return $package ? $package->getFullName() : NULL;
+	}
+
 }
