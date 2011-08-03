@@ -9,6 +9,9 @@ use Nette\Diagnostics\Debugger;
 
 // Load Nette Framework
 $params['libsDir'] = __DIR__ . '/../libs';
+if (!file_exists($params['libsDir'] . '/Nette/loader.php')) {
+	die('Please copy Nette Framework to libs/Nette');
+}
 require $params['libsDir'] . '/Nette/loader.php';
 
 
