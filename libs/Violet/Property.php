@@ -75,6 +75,42 @@ class Property extends Nette\Object
 
 
 	/**
+	 * @return string
+	 */
+	public function getTypeName()
+	{
+		$type = ($this->type === 'Collection' ? $this->subtype : $this->type);
+		return $this->parentType->getRelativeName($type);
+	}
+
+
+
+	/**
+	 * @return string
+	 */
+	public function getTypeHint()
+	{
+		if (!$this->type instanceof BaseType && $this->type !== 'Collection') {
+			return NULL;
+		}
+
+		$type = ($this->type === 'Collection' ? $this->subtype : $this->type);
+		return $this->parentType->getRelativeName($type) . ' ';
+	}
+
+
+
+	/**
+	 * @return string
+	 */
+	public function getSingularizedName()
+	{
+		return \Inflector::singularize($this->name);
+	}
+
+
+
+	/**
 	 * @return array
 	 */
 	public function getAnnotations()

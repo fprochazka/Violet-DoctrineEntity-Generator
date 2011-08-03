@@ -34,6 +34,77 @@ class {$type->name}{if $type->extends} extends {$type->getRelativeName($type->ex
 	{$property->visibility} ${$property->name};
 
 {/foreach}
+{if $type->hasCollections()}
+
+
+	public function __construct()
+	{
+	{foreach $type->properties as $property}
+		{if $property->isCollection()}
+		$this->{$property->name} = new ArrayCollection();
+		{/if}
+	{/foreach}
+	}
+
+{/if}
+{foreach $type->properties as $property}
+
+
+	{if $property->collection}
+	/**
+	 * @param {$property->typeName} ${$property->singularizedName}
+	 * @return {$type->name}
+	 */
+	public function add{$property->singularizedName|firstupper}({$property->typeHint}${$property->singularizedName})
+	{
+		$this->{$property->name}->add(${$property->singularizedName});
+		return $this;
+	}
+
+
+
+	/**
+	 * @param {$property->typeName} ${$property->singularizedName}
+	 * @return {$type->name}
+	 */
+	public function remove{$property->singularizedName|firstupper}({$property->typeHint}${$property->singularizedName})
+	{
+		$this->{$property->name}->removeElement(${$property->singularizedName});
+		return $this;
+	}
+
+
+
+	/**
+	 * @return array
+	 */
+	public function get{$property->name|firstupper}()
+	{
+		return $this->{$property->name}->toArray();
+	}
+	{else}
+	/**
+	 * @return {$property->typeName}
+	 */
+	public function get{$property->name|firstupper}()
+	{
+		return $this->{$property->name};
+	}
+
+
+
+	/**
+	 * @param {$property->typeName} ${$property->name}
+	 * @return {$type->name}
+	 */
+	public function set{$property->name|firstupper}({$property->typeHint}${$property->name})
+	{
+		$this->{$property->name} = ${$property->name};
+		return $this;
+	}
+	{/if}
+
+{/foreach}
 {foreach $type->methods as $method}
 
 
