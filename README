@@ -1,0 +1,11 @@
+Violet Doctrine 2 Entities Generator
+====================================
+
+Violet UML is minimalistic editor for creating Class Diagrams and few other UML visualisation.
+What was missing was lightweight exporter to Doctrine 2 Entities. And here it is.
+
+Homepage of editor: http://violet.sourceforge.net
+
+
+This software requires Nette Framework to run.
+Nette Framework can be downloaded here: http://nette.org/download
