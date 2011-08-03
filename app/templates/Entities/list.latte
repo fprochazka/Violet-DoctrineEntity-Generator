@@ -4,3 +4,12 @@
 
 <h2>2) krok: vybrat soubor</h2>
 
+<div>
+	<ul style="list-style-type:none;font-family:monospace">
+		<li n:foreach="$types as $name => $type">
+			{if $type instanceof \Kdyby\Violet\ClassType}C{else}I{/if}
+			<a n:href="generate, $name, TRUE" target="_blank">barevné</a>/<a n:href="generate, $name" target="_blank">zdroj</a>
+			{$name}
+		</li>
+	</ul>
+</div>

@@ -1,6 +1,7 @@
 <?php
 
 use Nette\Application\UI\Form;
+use Nette\Application\Responses\TextResponse;
 
 
 class EntitiesPresenter extends BasePresenter
@@ -21,16 +22,28 @@ class EntitiesPresenter extends BasePresenter
 		$this->session = $this->context->session->getSection('Kdyby.Violet/Class.Entities');
 
 		if (!$this->_t || !isset($this->session[$this->_t])) {
-			do {
-				$this->_t = Nette\Utils\Strings::random(3);
-			} while(isset($this->session[$this->_t]));
-
-			$this->session[$this->_t] = (object)array(
-				'uml' => NULL,
-				'packages' => array(),
-				'types' => array()
-			);
+			$this->createNewTicket();
 		}
+	}
+
+
+
+	/**
+	 * Creates new ticket and refreshes page
+	 */
+	private function createNewTicket()
+	{
+		do {
+			$this->_t = Nette\Utils\Strings::random(3);
+		} while(isset($this->session[$this->_t]));
+
+		$this->session[$this->_t] = (object)array(
+			'uml' => NULL,
+			'packages' => array(),
+			'types' => array()
+		);
+
+		$this->redirect('this', array('_t' => $this->_t));
 	}
 
 
@@ -64,6 +77,17 @@ class EntitiesPresenter extends BasePresenter
 	}
 
 
+	/*************** Upload ***************/
+
+
+	public function actionDefault()
+	{
+		if ($this->getUml()) {
+			$this->createNewTicket();
+		}
+	}
+
+
 
 	/**
 	 * @return Form
@@ -94,10 +118,11 @@ class EntitiesPresenter extends BasePresenter
 		$this->session[$this->_t]->packages = $reader->getPackages();
 		$this->session[$this->_t]->types = $reader->getTypes();
 
-		Nette\Diagnostics\Debugger::barDump($this->getPackages(), 'Packages');
-		Nette\Diagnostics\Debugger::barDump($this->getTypes(), 'Types');
+		foreach ($reader->errors as $error) {
+			$this->flashMessage($error, 'warning');
+		}
 
-//		$this->redirect('list');
+		$this->redirect('list');
 	}
 
 
@@ -115,9 +140,24 @@ class EntitiesPresenter extends BasePresenter
 
 
 
-	public function renderGenerate($type)
+	public function renderGenerate($type, $highlighted = FALSE)
 	{
+		if (!isset($this->types[$type])) {
+			$this->flashMessage('Neznámý typ ' . $type);
+			$this->redirect('list');
+		}
 
+		$writter = new Kdyby\Violet\EntityClassWritter(clone $this->template);
+		$code = $writter->write($this->types[$type]);
+
+		if ($highlighted) {
+			$code = highlight_string($code, TRUE);
+
+		} else {
+			$this->getHttpResponse()->setContentType('plain\text');
+		}
+
+		$this->sendResponse(new TextResponse($code));
 	}
 
 
