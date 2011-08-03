@@ -1,0 +1,13 @@
+{if $type->hasCollections()}
+
+
+	public function __construct()
+	{
+	{foreach $type->properties as $property}
+		{if $property->isCollection()}
+		$this->{$property->name} = new ArrayCollection();
+		{/if}
+	{/foreach}
+	}
+
+{/if}

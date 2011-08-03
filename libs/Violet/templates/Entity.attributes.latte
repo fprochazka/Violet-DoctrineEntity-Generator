@@ -1,0 +1,9 @@
+{foreach $type->properties as $property}
+	/**
+	{foreach $property->annotations as $annotation}
+	 * {$annotation}
+	{/foreach}
+	 */
+	{$property->visibility} ${$property->name};
+
+{/foreach}

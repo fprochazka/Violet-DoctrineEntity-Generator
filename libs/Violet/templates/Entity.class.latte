@@ -1,17 +1,3 @@
-{!='<'.'?php'}
-{if $type->package}
-namespace {$type->package->getFullName()};{/if}
-{foreach $type->getUsedRootPackages() as $package}{first}
-{/first}
-use {$package};
-{/foreach}
-{if $type->hasCollections()}
-use Doctrine\Common\Collections\Collection;
-use Doctrine\Common\Collections\ArrayCollection;
-{/if}
-
-
-
 /**
  * @Entity
  */
@@ -25,103 +11,8 @@ class {$type->name}{if $type->extends} extends {$type->getRelativeName($type->ex
 
 {l}
 
-{foreach $type->properties as $property}
-	/**
-	{foreach $property->annotations as $annotation}
-	 * {$annotation}
-	{/foreach}
-	 */
-	{$property->visibility} ${$property->name};
-
-{/foreach}
-{if $type->hasCollections()}
-
-
-	public function __construct()
-	{
-	{foreach $type->properties as $property}
-		{if $property->isCollection()}
-		$this->{$property->name} = new ArrayCollection();
-		{/if}
-	{/foreach}
-	}
-
-{/if}
-{foreach $type->properties as $property}
-
-
-	{if $property->collection}
-	/**
-	 * @param {$property->typeName} ${$property->singularizedName}
-	 * @return {$type->name}
-	 */
-	public function add{$property->singularizedName|firstupper}({$property->typeHint}${$property->singularizedName})
-	{
-		$this->{$property->name}->add(${$property->singularizedName});
-		return $this;
-	}
-
-
-
-	/**
-	 * @param {$property->typeName} ${$property->singularizedName}
-	 * @return {$type->name}
-	 */
-	public function remove{$property->singularizedName|firstupper}({$property->typeHint}${$property->singularizedName})
-	{
-		$this->{$property->name}->removeElement(${$property->singularizedName});
-		return $this;
-	}
-
-
-
-	/**
-	 * @return array
-	 */
-	public function get{$property->name|firstupper}()
-	{
-		return $this->{$property->name}->toArray();
-	}
-	{else}
-	/**
-	 * @return {$property->typeName}
-	 */
-	public function get{$property->name|firstupper}()
-	{
-		return $this->{$property->name};
-	}
-
-
-
-	/**
-	 * @param {$property->typeName} ${$property->name}
-	 * @return {$type->name}
-	 */
-	public function set{$property->name|firstupper}({$property->typeHint}${$property->name})
-	{
-		$this->{$property->name} = ${$property->name};
-		return $this;
-	}
-	{/if}
-
-{/foreach}
-{foreach $type->methods as $method}
-
-
-	/**
-	{foreach $method->getFormatedArgs(TRUE) as $name => $argType}
-	 * @param {$argType} ${$name}
-	{/foreach}
-	 * @return {$method->returnType}
-	 */
-	{$method->visibility} function {$method->name}({block #args|strip|trim}
-		{foreach $method->formatedArgs as $name => $argType}
-			{=ltrim($argType . ' ')}${$name}{sep}, {/sep}
-		{/foreach}
-	{/block})
-	{
-		throw new Nette\NotImplementedException;
-	}
-
-{/foreach}
+{include 'Entity.attributes.latte'}
+{include 'Entity.constructor.latte'}
+{include 'Entity.properties.latte'}
+{include 'Entity.methods.latte'}
 {r}
