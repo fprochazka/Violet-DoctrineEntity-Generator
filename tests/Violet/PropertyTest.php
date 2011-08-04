@@ -41,31 +41,6 @@ class PropertyTest extends \PHPUnit_Framework_TestCase
 
 
 
-	public function test()
-	{
-		foreach ($this->types as $type) {
-			foreach ($type->properties as $property) {
-					echo "  ";
-					var_dump(
-							$property->parentType->name . '::$' . $property->name . ' ' .
-							(is_object($property->type) ? $property->relation->name : $property->type) . ' ' .
-							(is_object($property->subtype) ? $property->subtype->name : $property->subtype) . ' ' .
-							$property->relationType . ' ' .
-							$property->otherSideRelationType . ' ' .
-							($property->relation ? $property->relation->name : NULL) .
-								(!$property->isUnidirectional() ? '::$' . $property->getOtherSideOfRelation()->name : NULL) . ' '
-						);
-					echo "isCollection()"; var_dump($property->isCollection());
-					echo "isMappingRelation()"; var_dump($property->isMappingRelation());
-					echo "isUnidirectional()"; var_dump($property->isUnidirectional());
-
-					echo "\n";
-			}
-		}
-	}
-
-
-
 	/**
 	 * @param string $typeName
 	 * @param string $propertyName
