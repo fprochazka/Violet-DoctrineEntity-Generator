@@ -70,7 +70,7 @@ class ClassType extends BaseType
 	public function hasCollections()
 	{
 		foreach ($this->properties as $property) {
-			if ($property->isCollection()) {
+			if ($property->type == 'Collection') {
 				return TRUE;
 			}
 		}

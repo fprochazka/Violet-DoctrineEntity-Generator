@@ -44,10 +44,10 @@ class EntityClassWritter extends Nette\Object
 	public function write(BaseType $type)
 	{
 		if ($type instanceof ClassType) {
-			$this->template->setFile(__DIR__ . '/templates/Entity.class.latte');
+			$this->template->setFile(__DIR__ . '/templates/Entity.latte');
 
 		} elseif ($type instanceof InterfaceType) {
-			$this->template->setFile(__DIR__ . '/templates/Interface.class.latte');
+			$this->template->setFile(__DIR__ . '/templates/Interface.latte');
 
 		} else {
 			throw new Nette\NotImplementedException("Unknown type");

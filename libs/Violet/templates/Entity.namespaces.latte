@@ -1,3 +1,4 @@
+
 {if $type->package}
 namespace {$type->package->getFullName()};{/if}
 {foreach $type->getUsedRootPackages() as $package}{first}
