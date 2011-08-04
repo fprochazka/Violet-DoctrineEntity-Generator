@@ -47,19 +47,20 @@ class Method extends Nette\Object
 
 
 	/**
-	 * @param boolean $phpDoc
 	 * @return array
 	 */
-	public function getFormatedArgs($phpDoc = FALSE)
+	public function getFormatedArgs()
 	{
 		$args = array();
 		foreach ($this->args as $name => $type) {
-			if (is_object($type)) {
-				$args[$name] = $this->parentType->getRelativeName($this->returns);
+			$args[] = $arg = (object)array(
+					'name' => $name,
+					'type' => $this->parentType->getRelativeName($type)
+				);
 
-			} else {
-				$args[$name] = $phpDoc ? $type : NULL;
-			}
+			$arg->typeHint = !$type instanceof BaseType
+				? NULL
+				: $this->parentType->getRelativeName($type);
 		}
 
 		return $args;

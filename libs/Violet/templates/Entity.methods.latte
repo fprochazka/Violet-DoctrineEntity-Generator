@@ -2,14 +2,14 @@
 
 
 	/**
-	{foreach $method->getFormatedArgs(TRUE) as $name => $argType}
-	 * @param {$argType} ${$name}
+	{foreach $method->formatedArgs as $arg}
+	 * @param {$arg->type} ${$arg->name}
 	{/foreach}
 	 * @return {$method->returnType}
 	 */
 	{$method->visibility} function {$method->name}({block #args|strip|trim}
-		{foreach $method->formatedArgs as $name => $argType}
-			{=ltrim($argType . ' ')}${$name}{sep}, {/sep}
+		{foreach $method->formatedArgs as $arg}
+			{$arg->typeHint} ${$arg->name}{sep}, {/sep}
 		{/foreach}
 	{/block})
 	{
