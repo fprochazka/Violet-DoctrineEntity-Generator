@@ -113,4 +113,60 @@ class ClassType extends BaseType
 		return $packages;
 	}
 
+
+
+	/**
+	 * @return type
+	 */
+	public function getAllMethods()
+	{
+		$methods = $this->getMethodsRequiredByInterface();
+		foreach ($this->methods as $method) { // implementation
+			$methods[$method->name] = $method;
+		}
+
+		if ($this->extends) { // parent interfaces
+			$methods += $this->extends->getMethodsRequiredByInterface();
+		}
+
+		return $methods;
+	}
+
+
+
+	/**
+	 * @return array
+	 */
+	public function getMethodsRequiredByInterface()
+	{
+		$methods = array();
+
+		foreach ($this->implements as $interface) {
+			foreach ($interface->getAllMethods() as $method) {
+				if (!$this->hasMethod($method->name)) {
+					$methods[$method->name] = $method;
+				}
+			}
+		}
+
+		return $methods;
+	}
+
+
+
+	/**
+	 * @param string $name
+	 * @return boolean
+	 */
+	public function hasMethod($name)
+	{
+		foreach ($this->methods as $method) {
+			if ($method->name === $name) {
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
 }

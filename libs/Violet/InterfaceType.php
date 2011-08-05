@@ -51,4 +51,23 @@ class InterfaceType extends BaseType
 		return $packages;
 	}
 
+
+
+	/**
+	 * @return array
+	 */
+	public function getAllMethods()
+	{
+		$methods = array();
+		foreach ($this->methods as $method) {
+			$methods[$method->name] = $method;
+		}
+
+		foreach ($this->extends as $interface) {
+			$methods += $interface->getAllMethods();
+		}
+
+		return $methods;
+	}
+
 }
