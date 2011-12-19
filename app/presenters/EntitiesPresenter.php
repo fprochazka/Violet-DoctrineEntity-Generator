@@ -10,6 +10,12 @@ class EntitiesPresenter extends BasePresenter
 	/** @persistent */
 	public $_t;
 
+	/** @persistent */
+	public $ormPrefix = 'Orm:';
+
+	/** @persistent */
+	public $fluent = TRUE;
+
 	/** @var Nette\Http\SessionSection */
 	private $session;
 
@@ -118,7 +124,7 @@ class EntitiesPresenter extends BasePresenter
 		$this->session[$this->_t]->packages = $reader->getPackages();
 		$this->session[$this->_t]->types = $reader->getTypes();
 
-		foreach ($reader->errors as $error) {
+		foreach ($reader->getErrors() as $error) {
 			$this->flashMessage($error, 'warning');
 		}
 
@@ -147,7 +153,9 @@ class EntitiesPresenter extends BasePresenter
 			$this->redirect('list');
 		}
 
-		$writter = new Kdyby\Violet\EntityClassWritter(clone $this->template);
+		$writter = new Kdyby\Violet\EntityClassWriter();
+		$writter->fluent = (bool)$this->fluent;
+		$writter->ormPrefix = '@' . $this->ormPrefix;
 		$code = $writter->write($this->types[$type]);
 
 		if ($highlighted) {

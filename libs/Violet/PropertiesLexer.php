@@ -30,7 +30,7 @@ class PropertiesLexer extends Nette\Utils\Tokenizer
 	{
 		parent::__construct(array(
 			'visibility' => '[#+-]',
-			'identifier' => '[_a-zA-Z\x7F-\xFF][_a-zA-Z0-9\x7F-\xFF\\\\-]*',
+			'identifier' => '[_a-zA-Z0-9\x7F-\xFF\\\\-]*',
 			'args' => '[()]',
 			'type' => '\:',
 			'default' => '\=',

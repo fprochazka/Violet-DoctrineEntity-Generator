@@ -247,11 +247,12 @@ class Property extends Nette\Object
 	/**
 	 * @return string
 	 */
-	private function getThisJoinColumnAnnotation()
+	private function getThisJoinColumnAnnotation($append = NULL)
 	{
 		return '@JoinColumn(' .
 				'name="' . \Inflector::singularize($this->name) . '_id", ' .
 				'referencedColumnName="' . $this->getReferencedColumnName() . '"' .
+				$append .
 			')';
 	}
 
@@ -270,7 +271,7 @@ class Property extends Nette\Object
 		if ($this->isOneToManyUnidirectional()) {
 			return '@JoinTable(' .
 					'name="' . $this->getManyToManyTableName() . '", ' .
-					'joinColumns={' . $this->getThisJoinColumnAnnotation() . ', unique=TRUE}, ' .
+					'joinColumns={' . $this->getThisJoinColumnAnnotation(', unique=TRUE') . '}, ' .
 					'inverseJoinColumns={' . $this->createOtherSideJoinColumnAnnotation() . '}' .
 				')';
 

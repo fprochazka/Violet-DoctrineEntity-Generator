@@ -21,10 +21,10 @@ use Nette;
 class ClassType extends BaseType
 {
 
-	/** @var array */
+	/** @var \Kdyby\Violet\Property[] */
 	public $properties = array();
 
-	/** @var array */
+	/** @var \Kdyby\Violet\Method[] */
 	public $methods = array();
 
 	/** @var string */
@@ -33,7 +33,7 @@ class ClassType extends BaseType
 	/** @var array */
 	public $implements = array();
 
-	/** @var array */
+	/** @var \Kdyby\Violet\ClassType[] */
 	public $relations = array();
 
 
