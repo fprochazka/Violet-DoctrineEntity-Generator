@@ -1,14 +1,14 @@
 {block content}
 
-<a n:href="default">Nahrát nový soubor</a>
+<a n:href="default">Upload new XML file</a>
 
-<h2>2) krok: vybrat soubor</h2>
+<h2>2) step: chose file</h2>
 
 <div>
 	<ul style="list-style-type:none;font-family:monospace">
 		<li n:foreach="$types as $name => $type">
 			{if $type instanceof \Kdyby\Violet\ClassType}C{else}I{/if}
-			<a n:href="generate, $name, TRUE" target="_blank">barevné</a>/<a n:href="generate, $name" target="_blank">zdroj</a>
+			<a n:href="generate, $name, TRUE" target="_blank">colored</a>/<a n:href="generate, $name" target="_blank">source</a>
 			{$name}
 		</li>
 	</ul>

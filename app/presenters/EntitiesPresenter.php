@@ -102,10 +102,10 @@ class EntitiesPresenter extends BasePresenter
 	{
 		$form = new Form;
 		$form->addUpload('uml', 'Class.Violet')
-			->addRule(Form::MIME_TYPE, 'Soubor musí být XML', 'application/xml')
+			->addRule(Form::MIME_TYPE, 'File type must be XML', 'application/xml')
 			->setRequired();
 
-		$form->addSubmit('upload', 'Nahrát');
+		$form->addSubmit('upload', 'Upload');
 		$form->onSuccess[] = callback($this, 'UploadSubmitted');
 
 		return $form;
@@ -149,7 +149,7 @@ class EntitiesPresenter extends BasePresenter
 	public function renderGenerate($type, $highlighted = FALSE)
 	{
 		if (!isset($this->types[$type])) {
-			$this->flashMessage('Neznámý typ ' . $type);
+			$this->flashMessage('Unknown type ' . $type);
 			$this->redirect('list');
 		}
 
