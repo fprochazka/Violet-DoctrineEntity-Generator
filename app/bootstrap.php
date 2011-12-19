@@ -3,16 +3,12 @@
 /**
  * My Application bootstrap file.
  */
-
-use Nette\Diagnostics\Debugger;
+use Nette\Diagnostics\Debugger,
+	Nette\Application\Routers\Route;
 
 
 // Load Nette Framework
-$params['libsDir'] = __DIR__ . '/../libs';
-if (!file_exists($params['libsDir'] . '/Nette/loader.php')) {
-	die('Please copy Nette Framework to libs/Nette');
-}
-require $params['libsDir'] . '/Nette/loader.php';
+require LIBS_DIR . '/Nette/loader.php';
 
 
 // Enable Nette Debugger for error visualisation & logging
@@ -21,15 +17,26 @@ Debugger::$strictMode = TRUE;
 Debugger::enable();
 
 
-// Load configuration from config.neon file
-$configurator = new Nette\Configurator;
-$configurator->container->params += $params;
-$configurator->container->params['tempDir'] = __DIR__ . '/../temp';
-$container = $configurator->loadConfig(__DIR__ . '/config.neon');
+// Configure application
+$configurator = new Nette\Config\Configurator;
+$configurator->setCacheDirectory(__DIR__ . '/../temp');
 
+// Enable RobotLoader - this will load all classes automatically
+$configurator->createRobotLoader()
+	->addDirectory(APP_DIR)
+	->addDirectory(LIBS_DIR)
+	->register();
+
+// Create Dependency Injection container from config.neon file
+$container = $configurator->loadConfig(__DIR__ . '/config/config.neon');
+
+// Opens already started session
+if ($container->session->exists()) {
+	$container->session->start();
+}
 
 // Setup router
-$router = $container->router;
+$router = $container->router;// Setup router
 $router[] = new Nette\Application\Routers\SimpleRouter('Entities:default');
 
 
