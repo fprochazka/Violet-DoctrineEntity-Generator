@@ -167,7 +167,7 @@ class EntityClassWriter extends Nette\Object
 			}
 		}
 
-		$constructor = $type->addMethod('__constructor');
+		$constructor = $type->addMethod('__construct');
 		if ($meta->hasCollections()) {
 			foreach ($meta->properties as $property) {
 				if (!$property->isCollection()) {
